@@ -69,5 +69,12 @@
     <string name="ble_not_supported">Bluetooth Low Energy not supported</string>
     <string name="scan">Scan</string>
     <string name="cancel">Cancel</string>
-    
+    <string name="permission_location_rationale_ble_title">Why need location?</string>
+    <string name="permission_location_rationale_ble">Android requires location permission to obtain information on the devices found.</string>
+    <string name="no_camera">Cannot access your device\'s camera</string>
+    <string name="save_to_drive">Save to Google Drive</string>
+    <string name="delete">Delete</string>
+    <string name="deleted_image">Successfully deleted image</string>
+    <string name="delete_image_fail">Fail to delete image</string>
+
 </resources>

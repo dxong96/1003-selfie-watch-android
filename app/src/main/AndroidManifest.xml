@@ -26,15 +26,19 @@
     android:versionCode="43"
     android:versionName="2.0" >
 
-    <uses-sdk
-        android:minSdkVersion="18"
-        android:targetSdkVersion="18" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
+
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application 
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.Holo.Light"
+        android:theme="@style/Theme.AppCompat"
         android:icon="@drawable/nrfuart_hdpi_icon">
         <activity
             android:name=".MainActivity"
@@ -47,7 +51,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DeviceListActivity" android:label="@string/app_name" android:theme="@android:style/Theme.Dialog"/>
+        <activity android:name=".CameraActivity"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AppCompat"
+            android:screenOrientation="portrait"/>
+
+        <activity android:name=".ImageActivity"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AppCompat"
+            android:screenOrientation="portrait"/>
+
         <service android:enabled="true" android:name=".UartService" />
     </application>
 
