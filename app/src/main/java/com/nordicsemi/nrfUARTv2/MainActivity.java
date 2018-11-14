@@ -160,7 +160,7 @@ public class MainActivity extends BLEActivity implements RadioGroup.OnCheckedCha
         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
         listAdapter.add("[" + currentDateTimeString + "] RX: " + text);
         messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
-        if (text.trim().equals("1")) {
+        if (text.equals("1")) {
             startActivity(new Intent(MainActivity.this, CameraActivity.class));
         }
     }

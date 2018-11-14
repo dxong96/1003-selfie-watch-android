@@ -32,7 +32,7 @@ import java.util.List;
 
 import static com.nordicsemi.nrfUARTv2.ImageActivity.EXTRA_IMAGE_PATH;
 
-public class CameraActivity extends AppCompatActivity implements View.OnClickListener {
+public class CameraActivity extends BLEActivity implements View.OnClickListener {
     private static final String TAG = "CameraActivity";
     private static int MY_PERMISSIONS_REQUEST_CAMERA = 2;
     private CameraPreview mPreview;
@@ -65,6 +65,28 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             initCamera();
         }
 
+    }
+
+    @Override
+    protected void notSupported() {
+
+    }
+
+    @Override
+    protected void connected() {
+
+    }
+
+    @Override
+    protected void disconnected() {
+
+    }
+
+    @Override
+    protected void dataAvailable(String text) {
+        if (text.equals("2")) {
+            mCamera.takePicture(null, null, mPicture);
+        }
     }
 
     @Override

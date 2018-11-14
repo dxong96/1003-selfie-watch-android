@@ -180,7 +180,7 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
                             } catch (UnsupportedEncodingException e) {
                                 e.printStackTrace();
                             }
-                            dataAvailable(text);
+                            dataAvailable(text.trim());
                             break;
                         case UartService.DEVICE_DOES_NOT_SUPPORT_UART:
                             notSupported();
