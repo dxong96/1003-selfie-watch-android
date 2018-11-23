@@ -1,6 +1,10 @@
 package com.nordicsemi.nrfUARTv2;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -40,7 +44,6 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
         intentFilter.addAction(UartService.DEVICE_DOES_NOT_SUPPORT_UART);
     }
 
-
     protected final Handler mHandler = new Handler();
     protected BluetoothDevice mDevice = null;
     protected BluetoothAdapter mBtAdapter = null;
@@ -59,20 +62,25 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
     @Override
     protected void onResume() {
         super.onResume();
-        if (!mBtAdapter.isEnabled()) {
-            Log.i(TAG, "onResume - BT not enabled yet");
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        }
+        tryEnableBT();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        Intent bindIntent = new Intent(this, UartService.class);
-        bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        Intent serviceIntent = new Intent(this, UartService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+        bindService(serviceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver, intentFilter);
+
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(BluetoothStateReceiver, filter);
+
     }
 
     @Override
@@ -80,7 +88,9 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
         super.onStop();
         unbindService(mServiceConnection);
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(UARTStatusChangeReceiver, intentFilter);
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
+        unregisterReceiver(BluetoothStateReceiver);
     }
 
     @Override
@@ -90,7 +100,6 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
                 // When the request to enable Bluetooth returns
                 if (resultCode == Activity.RESULT_OK) {
                     Toast.makeText(this, "Bluetooth has turned on ", Toast.LENGTH_SHORT).show();
-
                 } else {
                     // User did not enable Bluetooth or an error occurred
                     Log.d(TAG, "BT not enabled");
@@ -98,6 +107,22 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
                     finish();
                 }
                 break;
+        }
+    }
+
+    private void tryToConnect() {
+        if (previousDeviceAddress != null) {
+            mService.connect(previousDeviceAddress);
+        } else {
+            showScanDialog();
+        }
+    }
+
+    private void tryEnableBT() {
+        if (!mBtAdapter.isEnabled()) {
+            Log.i(TAG, "onResume - BT not enabled yet");
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         }
     }
 
@@ -111,10 +136,7 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
                 finish();
                 return;
             }
-            if (previousDeviceAddress != null) {
-                mService.connect(previousDeviceAddress);
-            }
-
+            tryToConnect();
         }
 
         public void onServiceDisconnected(ComponentName classname) {
@@ -123,6 +145,7 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
         }
     };
 
+    //call this function at the main activity
     protected void showScanDialog() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         Fragment prev = getSupportFragmentManager().findFragmentByTag("dialog");
@@ -146,10 +169,33 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
         mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
 
         Log.d(TAG, "... onActivityResultdevice.address==" + mDevice + "mserviceValue" + mService);
-        ((TextView) findViewById(R.id.deviceName)).setText(mDevice.getName()+ " - connecting");
+//        ((TextView) findViewById(R.id.deviceName)).setText(mDevice.getName()+ " - connecting");
         mService.connect(deviceAddress);
         previousDeviceAddress = deviceAddress;
     }
+
+    private final BroadcastReceiver BluetoothStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                        BluetoothAdapter.ERROR);
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        Log.d(TAG, "bluetooth off");
+                        mService.disconnect();
+                        tryEnableBT();
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        Log.d(TAG, "bluetooth on");
+                        tryToConnect();
+                        break;
+                }
+            }
+        }
+    };
 
     private final BroadcastReceiver UARTStatusChangeReceiver = new BroadcastReceiver() {
 
@@ -181,6 +227,7 @@ public abstract class BLEActivity extends AppCompatActivity implements DeviceLis
                                 e.printStackTrace();
                             }
                             dataAvailable(text.trim());
+                            Log.d(TAG, "Data received: " + text.trim());
                             break;
                         case UartService.DEVICE_DOES_NOT_SUPPORT_UART:
                             notSupported();

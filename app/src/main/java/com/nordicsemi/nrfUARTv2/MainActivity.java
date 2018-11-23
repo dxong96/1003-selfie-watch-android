@@ -24,15 +24,13 @@
 package com.nordicsemi.nrfUARTv2;
 
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -62,6 +60,9 @@ public class MainActivity extends BLEActivity implements RadioGroup.OnCheckedCha
     private ArrayAdapter<String> listAdapter;
     private Button btnConnectDisconnect, btnSend;
     private EditText edtMessage;
+//    public Typeface fontRegular = Typeface.createFromAsset(getAssets(), "fonts/Roboto-Regular.ttf");
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -88,6 +89,7 @@ public class MainActivity extends BLEActivity implements RadioGroup.OnCheckedCha
 
                         //Connect button pressed, open DeviceListActivity class, with popup windows that scan for devices
                         showScanDialog();
+
                     } else {
                         //Disconnect button pressed
                         if (mDevice != null) {
@@ -111,7 +113,7 @@ public class MainActivity extends BLEActivity implements RadioGroup.OnCheckedCha
                     //Update the log with time stamp
                     String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                     listAdapter.add("[" + currentDateTimeString + "] TX: " + message);
-                    messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+                   messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
                     edtMessage.setText("");
                 } catch (UnsupportedEncodingException e) {
                     // TODO Auto-generated catch block
@@ -138,8 +140,10 @@ public class MainActivity extends BLEActivity implements RadioGroup.OnCheckedCha
         btnSend.setEnabled(true);
         ((TextView) findViewById(R.id.deviceName)).setText(mDevice.getName() + " - ready");
         listAdapter.add("[" + currentDateTimeString + "] Connected to: " + mDevice.getName());
-        messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+//        messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
         mState = UART_PROFILE_CONNECTED;
+
+
     }
 
     @Override
@@ -159,11 +163,13 @@ public class MainActivity extends BLEActivity implements RadioGroup.OnCheckedCha
     protected void dataAvailable(String text) {
         String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
         listAdapter.add("[" + currentDateTimeString + "] RX: " + text);
-        messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
-        if (text.equals("1")) {
-            startActivity(new Intent(MainActivity.this, CameraActivity.class));
-        }
+//        messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+
+
     }
+
+
+
 
     @Override
     public void onCheckedChanged(RadioGroup group, int checkedId) {

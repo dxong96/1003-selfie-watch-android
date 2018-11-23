@@ -22,6 +22,10 @@
  */
 package com.nordicsemi.nrfUARTv2;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -35,10 +39,13 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,6 +78,10 @@ public class UartService extends Service {
             "com.nordicsemi.nrfUART.EXTRA_DATA";
     public final static String DEVICE_DOES_NOT_SUPPORT_UART =
             "com.nordicsemi.nrfUART.DEVICE_DOES_NOT_SUPPORT_UART";
+
+    private static final String STATUS_CHANNEL_ID = "connectivity_status_channel";
+    private static final int ONGOING_NOTIFICATION_ID = 1;
+
     
     public static final UUID TX_POWER_UUID = UUID.fromString("00001804-0000-1000-8000-00805f9b34fb");
     public static final UUID TX_POWER_LEVEL_UUID = UUID.fromString("00002a07-0000-1000-8000-00805f9b34fb");
@@ -92,6 +103,7 @@ public class UartService extends Service {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 intentAction = ACTION_GATT_CONNECTED;
                 mConnectionState = STATE_CONNECTED;
+                updateNotification();
                 broadcastUpdate(intentAction);
                 Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
@@ -101,6 +113,7 @@ public class UartService extends Service {
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
+                updateNotification();
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
             }
@@ -147,8 +160,16 @@ public class UartService extends Service {
         	
            // Log.d(TAG, String.format("Received TX: %d",characteristic.getValue() ));
             intent.putExtra(EXTRA_DATA, characteristic.getValue());
-        } else {
-        	
+
+            String text = null;
+            try {
+                text = new String(characteristic.getValue(), "UTF-8");
+                if (text.trim().equals("1")) {
+                    startActivity(new Intent(this, CameraActivity.class));
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
@@ -220,8 +241,13 @@ public class UartService extends Service {
         if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
             Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+            if (mConnectionState == STATE_CONNECTED) {
+                broadcastUpdate(ACTION_GATT_CONNECTED);
+                return true;
+            }
+
             if (mBluetoothGatt.connect()) {
-                mConnectionState = STATE_CONNECTING;
+                mConnectionState = STATE_CONNECTED;
                 return true;
             } else {
                 return false;
@@ -362,5 +388,65 @@ public class UartService extends Service {
         if (mBluetoothGatt == null) return null;
 
         return mBluetoothGatt.getServices();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        startInForeground();
+        return START_STICKY;
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.status);
+            String description = getString(R.string.status_channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(STATUS_CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private Notification createNotification() {
+        createNotificationChannel();
+        Intent notificationIntent = new Intent(this, CameraActivity.class);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        Notification.Builder builder;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(this, STATUS_CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(this);
+        }
+        int stringId = R.string.status_notification_not_connected_message;
+        if (mConnectionState == STATE_CONNECTED) {
+            stringId = R.string.status_notification_connected_message;
+        }
+
+        return builder
+                .setContentTitle(getText(R.string.app_name))
+                .setContentText(getText(stringId))
+                .setSmallIcon(R.drawable.nrfuart_hdpi_icon)
+                .setContentIntent(pendingIntent)
+                .setTicker(getText(R.string.status_notification_ticker_text))
+                .build();
+    }
+
+    public void updateNotification() {
+        Notification notification = createNotification();
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        notificationManager.notify(ONGOING_NOTIFICATION_ID, notification);
+    }
+
+    public void startInForeground() {
+        Notification notification = createNotification();
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
     }
 }

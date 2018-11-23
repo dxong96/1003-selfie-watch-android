@@ -76,5 +76,9 @@
     <string name="delete">Delete</string>
     <string name="deleted_image">Successfully deleted image</string>
     <string name="delete_image_fail">Fail to delete image</string>
+    <string name="status_channel_description">Shows if device is connected</string>
+    <string name="status_notification_connected_message">Connected to smart watch. Click to disconnect</string>
+    <string name="status_notification_not_connected_message">Not connected to smart watch</string>
+    <string name="status_notification_ticker_text">Connected to smart watch</string>
 
 </resources>

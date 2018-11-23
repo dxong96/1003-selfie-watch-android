@@ -11,8 +11,11 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.util.Date;
 
-public class ImageActivity extends AppCompatActivity implements View.OnClickListener {
+public class ImageActivity extends BLEActivity implements View.OnClickListener {
     static final String EXTRA_IMAGE_PATH = "image_path";
 
     private String imagePath;
@@ -29,6 +32,37 @@ public class ImageActivity extends AppCompatActivity implements View.OnClickList
         image.setImageBitmap(bitmap);
         findViewById(R.id.btn_drive).setOnClickListener(this);
         findViewById(R.id.btn_delete).setOnClickListener(this);
+
+    }
+
+    @Override
+    protected void notSupported() {
+
+    }
+
+    @Override
+    protected void connected() {
+        byte value[] = {'0'};
+        mService.writeRXCharacteristic(value);
+    }
+
+    @Override
+    protected void disconnected() {
+
+    }
+
+    @Override
+    protected void dataAvailable(String text) {
+        if (text.equals("8")){
+            if (new File(imagePath).delete()) {
+                Toast.makeText(this, R.string.deleted_image, Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(this, R.string.delete_image_fail, Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+
     }
 
     @Override
