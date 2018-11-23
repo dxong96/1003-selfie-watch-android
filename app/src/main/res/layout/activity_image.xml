@@ -13,11 +13,11 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="#cc000000">
-        <Button android:id="@+id/btn_drive"
+        <Button android:id="@+id/btn_send"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/save_to_drive"/>
+            android:text="@string/btn_send"/>
 
         <Button android:id="@+id/btn_delete"
             android:layout_width="0dp"
