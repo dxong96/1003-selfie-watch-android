@@ -460,6 +460,7 @@ public class CameraActivity extends BLEActivity implements View.OnClickListener 
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
+            statusTextField.setText("");
             File pictureFile = saveImage(data);
             if (pictureFile == null) {
                 return;
@@ -534,6 +535,11 @@ public class CameraActivity extends BLEActivity implements View.OnClickListener 
             updateFlashButton();
         } else if (v.getId() == R.id.burst_shot) {
             mCamera.takePicture(null, null, mBurstPicture);
+        } else if (v.getId() == R.id.disconnect_bt) {
+            mService.disconnect();
+            mService.stopForeground(true);
+            mService.stopSelf();
+            finish();
         }
     }
 

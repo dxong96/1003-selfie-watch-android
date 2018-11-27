@@ -432,7 +432,7 @@ public class UartService extends Service {
         return builder
                 .setContentTitle(getText(R.string.app_name))
                 .setContentText(getText(stringId))
-                .setSmallIcon(R.drawable.nrfuart_hdpi_icon)
+                .setSmallIcon(R.drawable.logo)
                 .setContentIntent(pendingIntent)
                 .setTicker(getText(R.string.status_notification_ticker_text))
                 .build();

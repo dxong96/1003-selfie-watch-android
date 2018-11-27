@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/1003-selfie-watch-android.iml" filepath="$PROJECT_DIR$/1003-selfie-watch-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/imgur/imgur.iml" filepath="$PROJECT_DIR$/imgur/imgur.iml" />
+      <module fileurl="file://$PROJECT_DIR$/imgur/src/main/main1.iml" filepath="$PROJECT_DIR$/imgur/src/main/main1.iml" />
     </modules>
   </component>
 </project>
